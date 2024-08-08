@@ -12,10 +12,10 @@ cc_library(
     ],
     deps = [
         "//lib/roo_collections",
-        "//lib/roo_scheduler",
-        "//lib/roo_temperature",
         "//lib/roo_logging",
         "//lib/roo_prefs",
+        "//lib/roo_scheduler",
+        "//lib/roo_temperature",
         "//roo_testing/buses/onewire",
         "//roo_testing/devices/onewire/thermometer",
         "//roo_testing/frameworks/arduino-esp32-2.0.4/cores/esp32",
