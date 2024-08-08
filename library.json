@@ -1,0 +1,26 @@
+{
+    "name": "roo_onewire",
+    "description": "Arduino library for OneWire thermometers. Supports asynchronous conversion with event notification, and persistent configuration to dynamically (re)assign static thermometer 'roles' to specific devices.",
+    "keywords": "OneWire, temperature, DS18B20",
+    "authors": [
+        {
+            "name": "Dejwk",
+            "email": "dejwk.oss@gmail.com",
+            "maintainer": true
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/dejwk/roo_onewire"
+    },
+    "version": "1.0.0",
+    "homepage": "https://github.com/dejwk/roo_onewire",
+    "frameworks": [
+        "Arduino",
+        "*"
+    ],
+    "build": {
+        "srcDir": "src",
+        "srcFilter": "+<*> -<examples> -<test>"
+    }
+}
