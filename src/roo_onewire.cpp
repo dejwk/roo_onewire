@@ -19,9 +19,18 @@ bool IsThermometerFamilySupported(uint8_t family) {
 }  // namespace
 
 #ifdef ROO_TESTING
+
+namespace {
+FakeOneWireInterface* findOrFail(uint8_t pin) {
+  auto itr = FakeEsp32().onewire_buses().find(pin);
+  CHECK(itr != FakeEsp32().onewire_buses().end())
+      << "No OneWire bus on pin " << (int)pin;
+  return itr->second;
+}
+}  // namespace
+
 OneWire::OneWire(uint8_t pin, roo_scheduler::Scheduler& scheduler)
-    : onewire_(FakeEsp32().onewire_buses().find(pin)->second),
-      thermometers_(*this, scheduler) {}
+    : onewire_(findOrFail(pin)), thermometers_(*this, scheduler) {}
 #else
 OneWire::OneWire(uint8_t pin, roo_scheduler::Scheduler& scheduler)
     : onewire_(pin), thermometers_(*this, scheduler) {}
