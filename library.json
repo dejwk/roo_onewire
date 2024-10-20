@@ -27,11 +27,11 @@
         "examples/*/*.ino"
     ],
     "dependencies": {
-        "OneWire": ">0",
         "dejwk/roo_collections": ">=1.1.5",
         "dejwk/roo_logging": ">=1.0.5",
         "dejwk/roo_prefs": ">=1.0.2",
         "dejwk/roo_scheduler": ">=1.2.1",
-        "dejwk/roo_temperature": ">=1.1.0"
+        "dejwk/roo_temperature": ">=1.1.0",
+        "paulstoffregen/OneWire": ">0"
     }
 }
