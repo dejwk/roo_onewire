@@ -85,9 +85,12 @@ bool Thermometers::update() {
   }
   readPowerSupply();
   updateThermometers();
-  if (!beginConversion()) return false;
+  if (!beginConversion()) {
+    return false;
+  }
   Interval delay = Millis(750);
-  conversion_completion_task_.scheduleAfter(delay);
+  conversion_completion_task_.scheduleAfter(delay,
+                                            roo_scheduler::PRIORITY_SENSITIVE);
   pending_conversion_ = Uptime::Now() + delay;
   return true;
 }
