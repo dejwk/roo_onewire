@@ -13,7 +13,6 @@ cc_library(
     deps = [
         "//lib/roo_collections",
         "//lib/roo_logging",
-        "//lib/roo_prefs",
         "//lib/roo_scheduler",
         "//lib/roo_temperature",
         "//roo_testing/buses/onewire",
