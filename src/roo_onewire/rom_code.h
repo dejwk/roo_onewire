@@ -28,6 +28,8 @@ class RomCode {
   constexpr RomCode(uint64_t code) : rom_code_(code) {}
   constexpr RomCode() : rom_code_(0) {}
 
+  static RomCode FromString(const char* str);
+
   bool isBroadcast() const { return rom_code_ == 0xFFFFFFFFFFFFFFFFLL; }
 
   bool isUnknown() const { return rom_code_ == 0; }

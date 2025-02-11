@@ -28,6 +28,24 @@ String RomCode::toString() const {
   return result;
 }
 
+RomCode RomCode::FromString(const char* str) {
+  uint64_t code = 0;
+  for (size_t i = 0; i < 16; ++i) {
+    if (i > 0) code <<= 4;
+    const char ch = str[i];
+    if (ch  >= '0' && ch <= '9') {
+      code |= (ch - '0');
+    } else if (ch >= 'A' && ch <= 'F') {
+      code |= (ch - 'A' + 10);
+    } else if (ch >= 'a' && ch <= 'f') {
+      code |= (ch - 'a' + 10);
+    } else {
+      return RomCode();
+    }
+  }
+  return RomCode(code);
+}
+
 void RomCode::toCharArray(char *out) const {
   uint64_t val = rom_code_;
   for (int i = 0; i < 8; ++i) {
