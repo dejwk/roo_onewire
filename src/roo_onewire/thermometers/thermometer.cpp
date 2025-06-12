@@ -5,7 +5,7 @@ namespace roo_onewire {
 Thermometer::Thermometer()
     : family_(DEVICE_FAMILY_UNKNOWN),
       resolution_(RESOLUTION_UNDEFINED),
-      temperature_(roo_temperature::Unknown()) {}
+      temperature_(roo_quantity::UnknownTemperature()) {}
 
 roo_logging::Stream& operator<<(roo_logging::Stream& os, const Thermometer& t) {
   os << "{rom_code: " << t.rom_code() << ", family: " << t.family()

@@ -3,7 +3,7 @@
 #include "roo_logging.h"
 #include "roo_onewire.h"
 
-using roo_temperature::Temperature;
+using roo_quantity::Temperature;
 
 using roo_time::Interval;
 using roo_time::Millis;
@@ -40,7 +40,7 @@ TemperatureData ReadTemperatureData(DeviceFamily family,
       // 9-bit resolution.
       int16_t fixed_point = (scratchpad[1] << 8) + scratchpad[0];
       return TemperatureData{.resolution = RESOLUTION_9_BITS,
-                             .temperature = roo_temperature::DegCelcius(
+                             .temperature = roo_quantity::TemperatureDegCelcius(
                                  (float)fixed_point / 2.0f)};
     }
     case DEVICE_FAMILY_DS18B20:
@@ -52,17 +52,17 @@ TemperatureData ReadTemperatureData(DeviceFamily family,
       uint16_t mask = ~((1 << (12 - resolution)) - 1);
       int16_t fixed_point = ((scratchpad[1] << 8) + scratchpad[0]) & mask;
       return TemperatureData{.resolution = resolution,
-                             .temperature = roo_temperature::DegCelcius(
+                             .temperature = roo_quantity::TemperatureDegCelcius(
                                  (float)fixed_point / 16.0f)};
     }
     case DEVICE_FAMILY_MAX31850: {
       // 14-bit resolution.
       return TemperatureData{.resolution = RESOLUTION_14_BITS,
-                             .temperature = roo_temperature::Unknown()};
+                             .temperature = roo_quantity::UnknownTemperature()};
     }
     default: {
       return TemperatureData{.resolution = RESOLUTION_UNDEFINED,
-                             .temperature = roo_temperature::Unknown()};
+                             .temperature = roo_quantity::UnknownTemperature()};
     }
   }
 }
@@ -215,7 +215,7 @@ bool Thermometers::initThermometer(RomCode rom_code,
     }
   }
   t.set(rom_code, family, temperature.resolution,
-        post_conversion ? temperature.temperature : roo_temperature::Unknown());
+        post_conversion ? temperature.temperature : roo_quantity::UnknownTemperature());
   return true;
 }
 
