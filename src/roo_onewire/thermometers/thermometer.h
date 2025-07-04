@@ -6,6 +6,7 @@
 #include "roo_onewire/device_family.h"
 #include "roo_onewire/rom_code.h"
 #include "roo_onewire/thermometers/resolution.h"
+#include "roo_quantity.h"
 #include "roo_quantity/temperature.h"
 
 namespace roo_onewire {
