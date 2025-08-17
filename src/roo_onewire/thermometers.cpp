@@ -77,7 +77,8 @@ Thermometers::Thermometers(OneWire& onewire,
       last_completed_conversion_(Uptime::Start()),
       pending_conversion_(Uptime::Start()),
       conversion_completion_task_(scheduler,
-                                  [this]() { conversionCompleted(); }) {}
+                                  [this]() { conversionCompleted(); }),
+      rememberance_(roo_time::Seconds(5)) {}
 
 bool Thermometers::update() {
   if (isConversionPending()) {
@@ -105,7 +106,10 @@ void Thermometers::updateThermometers() {
       // Sometimes the thermometers won't respond to discovery but can still be
       // read.
       if (!readScratchpad(i.rom_code(), scratchpad)) {
-        thermometers_.erase(i.rom_code());
+        // If reading was within the rememberance, still not erase.
+        if (roo_time::Uptime::Now() - i.conversion_time() >= rememberance_) {
+          thermometers_.erase(i.rom_code());
+        }
       }
     }
   }

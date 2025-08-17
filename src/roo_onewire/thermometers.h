@@ -127,6 +127,15 @@ class Thermometers {
   ConstIterator begin() const { return ConstIterator(this, 0); }
   ConstIterator end() const { return ConstIterator(this, count()); }
 
+  // How long are thermometers reported on the bus after they disappear.
+  // Defaults to 5 seconds. Helpful in overcoming flakiness of the OneWire
+  // protocol on weak singal lines.
+  roo_time::Interval rememberance() const { return rememberance_; }
+
+  void setRememberance(roo_time::Interval rememberance) {
+    rememberance_ = rememberance;
+  }
+
  private:
   friend class OneWire;
 
@@ -190,6 +199,11 @@ class Thermometers {
   ThermometersHT thermometers_;
 
   roo_collections::FlatSmallHashSet<EventListener*> event_listeners_;
+
+  // How long to report a previously present thermometer as still present, even
+  // if it doesn't report during discovery. Defaults to 5 seconds. Can be
+  // changed by setRememberance.
+  roo_time::Interval rememberance_;
 };
 
 }  // namespace roo_onewire
