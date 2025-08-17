@@ -97,19 +97,24 @@ bool Thermometers::update() {
 
 void Thermometers::updateThermometers() {
   RomCodeSet discovered = onewire_.discoverAll();
+  Scratchpad scratchpad;
   // Remove thermometers that disappeared from the bus.
-  for (const auto& i : thermometers_) {
+  for (auto& i : thermometers_) {
     if (!discovered.contains(i.rom_code())) {
-      thermometers_.erase(i.rom_code());
+      // Still try if we can read the status; if so, don't discard it just yet.
+      // Sometimes the thermometers won't respond to discovery but can still be
+      // read.
+      if (!readScratchpad(i.rom_code(), scratchpad)) {
+        thermometers_.erase(i.rom_code());
+      }
     }
   }
   // Add newly discovered thermometers.
   for (const auto& i : discovered) {
     if (!thermometers_.contains(i)) {
-      Scratchpad scratchpad;
       if (!readScratchpad(i, scratchpad)) continue;
       Thermometer t;
-      if (!initThermometer(i, scratchpad, t, /*post_conversion*/ false))
+      if (!initThermometer(i, scratchpad, t, roo_time::Uptime::Start()))
         continue;
       thermometers_.insert(t);
     }
@@ -156,7 +161,7 @@ bool Thermometers::readScratchpad(RomCode rom_code, Scratchpad& scratchpad) {
 
 bool Thermometers::initThermometer(RomCode rom_code,
                                    const Scratchpad& scratchpad, Thermometer& t,
-                                   bool post_conversion) {
+                                   roo_time::Uptime conversion_time) {
   DeviceFamily family;
   TemperatureData temperature;
   switch (rom_code.getFamily()) {
@@ -214,8 +219,13 @@ bool Thermometers::initThermometer(RomCode rom_code,
       return false;
     }
   }
-  t.set(rom_code, family, temperature.resolution,
-        post_conversion ? temperature.temperature : roo_quantity::UnknownTemperature());
+  if (conversion_time > roo_time::Uptime::Start()) {
+    t.set(rom_code, family, temperature.resolution, temperature.temperature,
+          conversion_time);
+  } else {
+    t.set(rom_code, family, temperature.resolution,
+          roo_quantity::UnknownTemperature(), roo_time::Uptime::Start());
+  }
   return true;
 }
 
@@ -233,7 +243,7 @@ void Thermometers::conversionCompleted() {
     Scratchpad scratchpad;
     if (readScratchpad(i, scratchpad)) {
       initThermometer(i, scratchpad, *thermometers_.find(i),
-                      /*post_conversion*/ true);
+                      last_completed_conversion_);
     }
   }
   for (auto& listener : event_listeners_) {

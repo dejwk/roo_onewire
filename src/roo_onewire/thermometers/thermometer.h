@@ -19,22 +19,26 @@ class Thermometer {
   DeviceFamily family() const { return family_; }
   Resolution resolution() const { return resolution_; }
   roo_quantity::Temperature temperature() const { return temperature_; }
+  roo_time::Uptime conversion_time() const { return conversion_time_; }
 
  private:
   friend class Thermometers;
 
   void set(RomCode rom_code, DeviceFamily family, Resolution resolution,
-           roo_quantity::Temperature temperature) {
+           roo_quantity::Temperature temperature,
+           roo_time::Uptime conversion_time) {
     rom_code_ = rom_code;
     family_ = family;
     resolution_ = resolution;
     temperature_ = temperature;
+    conversion_time_ = conversion_time;
   }
 
   RomCode rom_code_;
   DeviceFamily family_;
   Resolution resolution_;
   roo_quantity::Temperature temperature_;
+  roo_time::Uptime conversion_time_;
 };
 
 roo_logging::Stream& operator<<(roo_logging::Stream& os, const Thermometer& t);

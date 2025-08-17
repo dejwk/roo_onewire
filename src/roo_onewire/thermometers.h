@@ -162,8 +162,10 @@ class Thermometers {
 
   void conversionCompleted();
 
+  // If conversion_time is zero, it is assumed that there has been no conversion
+  // yet.
   bool initThermometer(RomCode rom_code, const Scratchpad& scratchpad,
-                       Thermometer& t, bool post_conversion);
+                       Thermometer& t, roo_time::Uptime conversion_time);
 
   void readPowerSupply();
 
