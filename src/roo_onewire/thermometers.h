@@ -82,6 +82,8 @@ class Thermometers {
     int idx_;
   };
 
+  // Returns true if the bus uses parasite power; false otherwise. Updated by
+  // `update()`.
   bool isParasite() const { return parasite_; }
 
   // Returns the count of supported thermometers that have been identified on
@@ -105,11 +107,21 @@ class Thermometers {
     return *thermometerByRomCode(rom_code(idx));
   }
 
+  // Returns the last completed conversion time, or Uptime::Start() if there was
+  // no complete converion yet.
+  //
+  // Thermometers will generally report the same time from `conversion_time()`,
+  // although they may report older values in case they failed to read after the
+  // most recent conversion request.
   roo_time::Uptime lastReadingTime() const {
     return last_completed_conversion_;
   }
 
+  // Adds a listener to be notified when new thermometers are discovered or when
+  // convesion completes.
   void addEventListener(EventListener* listener);
+
+  // Removes a previously added event listener.
   void removeEventListener(EventListener* listener);
 
   // Returs true if a conversion is in progress. You can check when the
@@ -118,20 +130,30 @@ class Thermometers {
     return pending_conversion_ != roo_time::Uptime::Start();
   }
 
+  // Returns the time (usually in the future) when the pending conversion is
+  // expected to complete. If there is no pending conversion, returns
+  // Uptime::Start().
   roo_time::Uptime getPendingConversionTime() const {
     return pending_conversion_;
   }
 
+  // Returns the vector of all rom codes, sorted lexicographically.
   const std::vector<RomCode>& rom_codes() const { return rom_codes_; }
 
+  // Returns an iterator pointing at the first thermometer.
   ConstIterator begin() const { return ConstIterator(this, 0); }
+
+  // Returns an iterator pointing past the last thermometer.
   ConstIterator end() const { return ConstIterator(this, count()); }
 
-  // How long are thermometers reported on the bus after they disappear.
-  // Defaults to 5 seconds. Helpful in overcoming flakiness of the OneWire
-  // protocol on weak singal lines.
+  // Returns the deadline after which a thermometer that is no longer
+  // discoverable gets removed by the `update()` call. Defaults to 5 seconds.
+  // Helpful in overcoming flicker due to flakiness of the OneWire protocol on
+  // weak singal lines.
   roo_time::Interval rememberance() const { return rememberance_; }
 
+  // Sets the deadline after which thermometers that are no longer discoverable get
+  // removed by the `update()` call.
   void setRememberance(roo_time::Interval rememberance) {
     rememberance_ = rememberance;
   }
