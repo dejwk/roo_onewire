@@ -31,6 +31,9 @@ class Thermometers {
     virtual void conversionCompleted() const {}
   };
 
+  // Convenience implementation of the EventListener, which ignores discovery
+  // events (new thermometers), but triggers on new readings, executing the
+  // specified callback.
   class ConversionListener : public EventListener {
    public:
     ConversionListener(std::function<void()> fn) : fn_(fn) {}
@@ -152,8 +155,8 @@ class Thermometers {
   // weak singal lines.
   roo_time::Interval rememberance() const { return rememberance_; }
 
-  // Sets the deadline after which thermometers that are no longer discoverable get
-  // removed by the `update()` call.
+  // Sets the deadline after which thermometers that are no longer discoverable
+  // get removed by the `update()` call.
   void setRememberance(roo_time::Interval rememberance) {
     rememberance_ = rememberance;
   }
