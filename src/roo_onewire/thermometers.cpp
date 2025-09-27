@@ -78,7 +78,7 @@ Thermometers::Thermometers(OneWire& onewire,
       pending_conversion_(Uptime::Start()),
       conversion_completion_task_(scheduler,
                                   [this]() { conversionCompleted(); }),
-      rememberance_(roo_time::Seconds(5)) {}
+      pruning_grace_period_(roo_time::Seconds(5)) {}
 
 bool Thermometers::update() {
   if (isConversionPending()) {
@@ -107,7 +107,7 @@ void Thermometers::updateThermometers() {
       // read.
       if (!readScratchpad(i.rom_code(), scratchpad)) {
         // If reading was within the rememberance, still not erase.
-        if (roo_time::Uptime::Now() - i.conversion_time() >= rememberance_) {
+        if (roo_time::Uptime::Now() - i.conversion_time() >= pruning_grace_period_) {
           thermometers_.erase(i.rom_code());
         }
       }
