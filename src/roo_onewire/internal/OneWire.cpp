@@ -145,7 +145,7 @@ sample code bearing this copyright.
 */
 
 #include <Arduino.h>
-#include "OneWire.h"
+#include "roo_onewire/internal/OneWire.h"
 #include "roo_onewire/internal/util/OneWire_direct_gpio.h"
 
 #ifdef ARDUINO_ARCH_ESP32

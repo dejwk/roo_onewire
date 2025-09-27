@@ -7,17 +7,6 @@
 #include "roo_logging.h"
 #include "roo_onewire/device_family.h"
 
-#ifdef ROO_TESTING
-
-#include "roo_testing/buses/onewire/OneWire.h"
-#include "roo_testing/buses/onewire/fake_onewire.h"
-
-#else
-
-#include <OneWire.h>
-
-#endif
-
 namespace roo_onewire {
 
 using OneWireDeviceAddress = uint8_t[8];

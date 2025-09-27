@@ -1,5 +1,7 @@
 #include "roo_onewire/rom_code.h"
 
+#include "roo_onewire/bus.h"
+
 namespace roo_onewire {
 
 namespace {
@@ -29,7 +31,7 @@ bool RomCode::isValidUnicast() const {
   }
   OneWireDeviceAddress addr;
   toOneWireDeviceAddress(addr);
-  return OneWire::crc8(addr, 7) == addr[7];
+  return Bus::crc8(addr, 7) == addr[7];
 }
 
 String RomCode::toString() const {
