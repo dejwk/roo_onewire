@@ -8,6 +8,19 @@ inline char NibbleToChar(uint8_t nibble) {
   return nibble >= 10 ? nibble - 10 + 'A' : nibble + '0';
 }
 
+inline bool CharToNibble(char ch, uint8_t &nibble) {
+  if (ch >= '0' && ch <= '9') {
+    nibble = ch - '0';
+  } else if (ch >= 'A' && ch <= 'F') {
+    nibble = ch - 'A' + 10;
+  } else if (ch >= 'a' && ch <= 'f') {
+    nibble = ch - 'a' + 10;
+  } else {
+    return false;
+  }
+  return true;
+}
+
 }  // namespace
 
 bool RomCode::isValidUnicast() const {
@@ -23,28 +36,24 @@ String RomCode::toString() const {
   String result;
   uint64_t val = rom_code_;
   for (int i = 0; i < 8; ++i) {
-    uint8_t b = val >> (8 * (7 - i));
+    uint8_t b = val & 0xFF;
     result += NibbleToChar(b >> 4);
     result += NibbleToChar(b & 15);
-    // val >>= 8;
+    val >>= 8;
   }
   return result;
 }
 
 RomCode RomCode::FromString(const char *str) {
+  LOG(INFO) << str;
   uint64_t code = 0;
-  for (size_t i = 0; i < 16; ++i) {
-    if (i > 0) code <<= 4;
-    const char ch = str[i];
-    if (ch >= '0' && ch <= '9') {
-      code |= (ch - '0');
-    } else if (ch >= 'A' && ch <= 'F') {
-      code |= (ch - 'A' + 10);
-    } else if (ch >= 'a' && ch <= 'f') {
-      code |= (ch - 'a' + 10);
-    } else {
+  for (size_t i = 0; i < 8; ++i) {
+    uint8_t lo, hi;
+    if (!CharToNibble(str[i * 2], hi) || !CharToNibble(str[i * 2 + 1], lo)) {
       return RomCode();
     }
+    LOG(INFO) << (int)hi << ", " << (int)lo;
+    code |= ((uint64_t)(hi << 4 | lo) << (8 * i));
   }
   return RomCode(code);
 }
@@ -52,9 +61,10 @@ RomCode RomCode::FromString(const char *str) {
 void RomCode::toCharArray(char *out) const {
   uint64_t val = rom_code_;
   for (int i = 0; i < 8; ++i) {
-    uint8_t b = val >> (8 * (7 - i));
+    uint8_t b = val & 0xFF;
     out[i * 2] = NibbleToChar(b >> 4);
     out[i * 2 + 1] = NibbleToChar(b & 15);
+    val >>= 8;
   }
 }
 
