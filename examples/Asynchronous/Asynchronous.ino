@@ -12,7 +12,7 @@ using namespace roo_onewire;
 using namespace roo_scheduler;
 using namespace roo_time;
 
-const int kOneWirePin = 14;
+const int kOneWirePin = 18;
 
 Scheduler scheduler;
 roo_onewire::OneWire onewire(kOneWirePin, scheduler);
@@ -20,17 +20,17 @@ roo_onewire::OneWire onewire(kOneWirePin, scheduler);
 Thermometers& thermometers = onewire.thermometers();
 
 // Triggers conversion every two seconds.
-RepetitiveTask converter(
-    scheduler,
-    []() {
-      LOG(INFO) << "Attempting conversion...";
-      if (!onewire.update()) {
-        LOG(WARNING)
-            << "OneWire update failed; possibly no thermometers attached to "
-               "the bus?";
-      }
-    },
-    Seconds(2));
+// We are using a scheduled task so that we don't have to worry about observing
+// millis() and calling the function when needed - it is handled by the
+// repetitive task implementation.
+RepetitiveTask converter(scheduler, Seconds(2), []() {
+  LOG(INFO) << "Attempting conversion...";
+  if (!onewire.update()) {
+    LOG(WARNING)
+        << "OneWire update failed; possibly no thermometers attached to "
+           "the bus?";
+  }
+});
 
 // Called when conversion completes.
 Thermometers::ConversionListener listener([]() {
@@ -44,19 +44,14 @@ void setup() {
   // Register our listener so that it gets executed every time conversion
   // completes.
   thermometers.addEventListener(&listener);
+
   // Get the converter going, so that it triggers conversion every 2 seconds.
   converter.startInstantly();
 }
 
 void loop() {
   // Do whetever else you need to do in the loop(), just remember to call the
-  // scheduler to execute pending tasks when they are ready.
-  //
-  // At any given time, the scheduler queue may contain up to two tasks:
-  // 1. the converter task (scheduled every 2s)
-  // 2. the internal task that gets scheduled at a fixed interval after the
-  //    converter, that fetches conversion results from the thermometers, and
-  //    then calls your listener, notifying it that the conversion has
-  //    completed.
+  // scheduler so that pending conversion tasks get executed when they become
+  // due.
   scheduler.executeEligibleTasksUpToNow();
 }
