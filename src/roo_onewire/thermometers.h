@@ -2,6 +2,7 @@
 
 #include <functional>
 
+#include "roo_collections.h"
 #include "roo_collections/flat_small_hash_map.h"
 #include "roo_onewire/bus.h"
 #include "roo_onewire/device_family.h"
