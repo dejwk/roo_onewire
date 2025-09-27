@@ -11,7 +11,7 @@ cc_library(
         "src",
     ],
     deps = [
-        # "@roo_collections",
+        "@roo_collections",
         "@roo_logging",
         "@roo_quantity",
         "@roo_scheduler",
