@@ -20,3 +20,18 @@ cc_library(
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/cores/esp32",
     ],
 )
+
+cc_test(
+    name = "rom_code_test",
+    srcs = [
+        "test/rom_code_test.cpp",
+    ],
+    includes = ["src"],
+    copts = ["-Iexternal/gtest/include"],
+    linkstatic = 1,
+    deps = [
+        ":roo_onewire",
+        "@roo_testing//:arduino_gtest_main",
+        "@googletest//:gtest",
+    ],
+)

@@ -11,6 +11,9 @@ inline char NibbleToChar(uint8_t nibble) {
 }  // namespace
 
 bool RomCode::isValidUnicast() const {
+  if (rom_code_ == 0 || rom_code_ == 0xFFFFFFFFFFFFFFFFLL) {
+    return false;
+  }
   OneWireDeviceAddress addr;
   toOneWireDeviceAddress(addr);
   return OneWire::crc8(addr, 7) == addr[7];
@@ -28,12 +31,12 @@ String RomCode::toString() const {
   return result;
 }
 
-RomCode RomCode::FromString(const char* str) {
+RomCode RomCode::FromString(const char *str) {
   uint64_t code = 0;
   for (size_t i = 0; i < 16; ++i) {
     if (i > 0) code <<= 4;
     const char ch = str[i];
-    if (ch  >= '0' && ch <= '9') {
+    if (ch >= '0' && ch <= '9') {
       code |= (ch - '0');
     } else if (ch >= 'A' && ch <= 'F') {
       code |= (ch - 'A' + 10);
