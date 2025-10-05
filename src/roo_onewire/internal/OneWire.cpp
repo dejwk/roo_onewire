@@ -144,6 +144,8 @@ sample code bearing this copyright.
 //--------------------------------------------------------------------------
 */
 
+#ifndef ROO_TESTING
+
 #include <Arduino.h>
 #include "roo_onewire/internal/OneWire.h"
 #include "roo_onewire/internal/util/OneWire_direct_gpio.h"
@@ -606,3 +608,5 @@ uint16_t OneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
 
 }  // namespace internal
 }  // namespace roo_onewire
+
+#endif // ROO_TESTING
