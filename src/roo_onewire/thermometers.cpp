@@ -5,7 +5,7 @@
 
 using roo_quantity::Temperature;
 
-using roo_time::Interval;
+using roo_time::Duration;
 using roo_time::Millis;
 using roo_time::Uptime;
 
@@ -89,7 +89,7 @@ bool Thermometers::update() {
   if (!beginConversion()) {
     return false;
   }
-  Interval delay = Millis(750);
+  roo_time::Duration delay = Millis(750);
   conversion_completion_task_.scheduleAfter(delay,
                                             roo_scheduler::PRIORITY_SENSITIVE);
   pending_conversion_ = Uptime::Now() + delay;

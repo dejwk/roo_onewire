@@ -154,13 +154,13 @@ class Thermometers {
   // discoverable gets removed by the `update()` call. Defaults to 5 seconds.
   // Helpful in overcoming flicker due to flakiness of the OneWire protocol on
   // weak singal lines.
-  roo_time::Interval pruningGracePeriod() const {
+  roo_time::Duration pruningGracePeriod() const {
     return pruning_grace_period_;
   }
 
   // Sets the deadline after which thermometers that are no longer discoverable
   // get removed by the `update()` call.
-  void setPruningGracePeriod(roo_time::Interval pruning_grace_period) {
+  void setPruningGracePeriod(roo_time::Duration pruning_grace_period) {
     pruning_grace_period_ = pruning_grace_period;
   }
 
@@ -231,7 +231,7 @@ class Thermometers {
   // How long to report a previously present thermometer as still present, even
   // if it doesn't report during discovery. Defaults to 5 seconds. Can be
   // changed by setRememberance.
-  roo_time::Interval pruning_grace_period_;
+  roo_time::Duration pruning_grace_period_;
 };
 
 }  // namespace roo_onewire
