@@ -47,14 +47,12 @@ String RomCode::toString() const {
 }
 
 RomCode RomCode::FromString(const char *str) {
-  LOG(INFO) << str;
   uint64_t code = 0;
   for (size_t i = 0; i < 8; ++i) {
     uint8_t lo, hi;
     if (!CharToNibble(str[i * 2], hi) || !CharToNibble(str[i * 2 + 1], lo)) {
       return RomCode();
     }
-    LOG(INFO) << (int)hi << ", " << (int)lo;
     code |= ((uint64_t)(hi << 4 | lo) << (8 * i));
   }
   return RomCode(code);
