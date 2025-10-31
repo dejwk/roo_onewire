@@ -5,7 +5,7 @@
 static const uint8_t kReadPowerSupply = 0xB4;
 
 #ifdef ROO_TESTING
-#include "roo_testing/devices/microcontroller/esp32/fake_esp32.h"
+#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
 #endif
 namespace roo_onewire {
 
