@@ -3,6 +3,10 @@
 #include "roo_logging.h"
 #include "roo_onewire.h"
 
+#if !defined(MLOG_roo_onewire_thermometers)
+#define MLOG_roo_onewire_thermometers 0
+#endif
+
 using roo_quantity::Temperature;
 
 using roo_time::Duration;
@@ -97,6 +101,7 @@ bool Thermometers::update() {
 }
 
 void Thermometers::updateThermometers() {
+  MLOG(roo_onewire_thermometers) << "Starting thermometer discovery...";
   RomCodeSet discovered = onewire_.discoverAll();
   Scratchpad scratchpad;
   // Remove thermometers that disappeared from the bus.
@@ -107,7 +112,11 @@ void Thermometers::updateThermometers() {
       // read.
       if (!readScratchpad(i.rom_code(), scratchpad)) {
         // If reading was within the rememberance, still not erase.
-        if (roo_time::Uptime::Now() - i.conversion_time() >= pruning_grace_period_) {
+        if (roo_time::Uptime::Now() - i.conversion_time() >=
+            pruning_grace_period_) {
+          MLOG(roo_onewire_thermometers)
+              << "Thermometer " << i.rom_code()
+              << " disappeared from the bus; removing.";
           thermometers_.erase(i.rom_code());
         }
       }
@@ -118,11 +127,16 @@ void Thermometers::updateThermometers() {
     if (!thermometers_.contains(i)) {
       if (!readScratchpad(i, scratchpad)) continue;
       Thermometer t;
-      if (!initThermometer(i, scratchpad, t, roo_time::Uptime::Start()))
+      if (!initThermometer(i, scratchpad, t, roo_time::Uptime::Start())) {
         continue;
+      }
+      MLOG(roo_onewire_thermometers) << "Discovered new thermometer " << i;
       thermometers_.insert(t);
     }
   }
+  MLOG(roo_onewire_thermometers)
+      << "Thermometer discovery completed; " << thermometers_.size()
+      << " thermometers found.";
   rom_codes_.clear();
   for (const auto& i : thermometers_) {
     rom_codes_.push_back(i.rom_code());
@@ -235,12 +249,14 @@ bool Thermometers::initThermometer(RomCode rom_code,
 
 bool Thermometers::beginConversion() {
   if (!bus().reset()) return false;
+  MLOG(roo_onewire_thermometers) << "Starting temperature conversion... ";
   bus().skip();
   bus().write(kConvert, parasite_);
   return true;
 }
 
 void Thermometers::conversionCompleted() {
+  MLOG(roo_onewire_thermometers) << "Temperature conversion completed.";
   last_completed_conversion_ = pending_conversion_;
   pending_conversion_ = Uptime::Start();
   for (const auto& i : rom_codes_) {
