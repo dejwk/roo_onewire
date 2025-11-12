@@ -30,18 +30,25 @@ FakeOneWireInterface* findOrFail(uint8_t pin) {
 }  // namespace
 
 OneWire::OneWire(roo_scheduler::Scheduler& scheduler)
-    : onewire_(), thermometers_(*this, scheduler) {}
+    : onewire_(nullptr), thermometers_(*this, scheduler) {}
+
+void OneWire::begin(uint8_t pin) {
+  onewire_ = FakeOneWire(findOrFail(pin));
+  onewire_.begin(pin);
+}
+
 #else
 OneWire::OneWire(roo_scheduler::Scheduler& scheduler)
     : onewire_(), thermometers_(*this, scheduler) {}
+
+
+void OneWire::begin(uint8_t pin) { onewire_.begin(pin); }
 #endif
 
 OneWire::OneWire(uint8_t pin, roo_scheduler::Scheduler& scheduler)
     : OneWire(scheduler) {
   begin(pin);
 }
-
-void OneWire::begin(uint8_t pin) { onewire_.begin(pin); }
 
 RomCodeSet OneWire::discoverAll() {
   RomCodeSet result(thermometers_.count() > 0 ? thermometers_.count() : 8);
