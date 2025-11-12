@@ -15,7 +15,7 @@ using namespace roo_time;
 const int kOneWirePin = 18;
 
 Scheduler scheduler;
-roo_onewire::OneWire onewire(kOneWirePin, scheduler);
+roo_onewire::OneWire onewire(scheduler);
 
 Thermometers& thermometers = onewire.thermometers();
 
@@ -41,6 +41,8 @@ Thermometers::ConversionListener listener([]() {
 });
 
 void setup() {
+  onewire.begin(kOneWirePin);
+
   // Register our listener so that it gets executed every time conversion
   // completes.
   thermometers.addEventListener(&listener);

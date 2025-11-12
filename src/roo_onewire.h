@@ -9,7 +9,15 @@ namespace roo_onewire {
 
 class OneWire {
  public:
+  // Creates a OneWire bus master that uses the specified scheduler for
+  // asynchronous operations.
+  explicit OneWire(roo_scheduler::Scheduler& scheduler);
+
+  // DEPRECATED. Use OneWire(scheduler) followed by begin(pin) instead.
+  // (Behavior or pinMode() during static initialization is not guaranteed.)
   OneWire(uint8_t pin, roo_scheduler::Scheduler& scheduler);
+
+  void begin(uint8_t pin);
 
   // Re-discovers devices on the bus, fetches their state, and requests
   // temperature conversion for thermometers. Returns true if the conversion

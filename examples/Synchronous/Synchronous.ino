@@ -15,10 +15,12 @@ using namespace roo_scheduler;
 const int kOneWirePin = 18;
 
 Scheduler scheduler;
-roo_onewire::OneWire onewire(kOneWirePin, scheduler);
+roo_onewire::OneWire onewire(scheduler);
 Thermometers& thermometers = onewire.thermometers();
 
-void setup() {}
+void setup() {
+  onewire.begin(kOneWirePin);
+}
 
 long next_update_time = 0;
 bool readings_fetched = true;
