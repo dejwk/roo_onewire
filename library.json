@@ -13,7 +13,7 @@
         "type": "git",
         "url": "https://github.com/dejwk/roo_onewire"
     },
-    "version": "2.0.7",
+    "version": "2.0.8",
     "homepage": "https://github.com/dejwk/roo_onewire",
     "frameworks": [
         "Arduino",
