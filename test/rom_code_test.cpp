@@ -12,7 +12,7 @@ TEST(RomCode, DefaultConstructor) {
   RomCode code;
   EXPECT_STREQ(code.toString().c_str(), "0000000000000000");
   EXPECT_FALSE(code.isValidUnicast());
-  EXPECT_EQ(0, code.raw());
+  EXPECT_EQ(0ULL, code.raw());
   EXPECT_TRUE(code.isUnknown());
 }
 
