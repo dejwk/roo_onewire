@@ -16,25 +16,25 @@ namespace roo_onewire {
 
 class OneWire;
 
+/// Scratchpad read buffer for DS18xx-family devices.
 using Scratchpad = uint8_t[9];
 
+/// Collection of discovered thermometers with async conversion support.
 class Thermometers {
  public:
+  /// Listener for discovery and conversion events.
   class EventListener {
    public:
     virtual ~EventListener() = default;
 
-    // Called after the OneWire discovery protocol finishes. The list of
-    // thermometers may now be different than before.
+    /// Called after discovery finishes; the set of thermometers may change.
     virtual void discoveryCompleted() const {}
 
-    // Called when new temperature readings are available on the thermometers.
+    /// Called when new temperature readings are available.
     virtual void conversionCompleted() const {}
   };
 
-  // Convenience implementation of the EventListener, which ignores discovery
-  // events (new thermometers), but triggers on new readings, executing the
-  // specified callback.
+  /// Convenience listener that invokes a callback after conversion.
   class ConversionListener : public EventListener {
    public:
     ConversionListener(std::function<void()> fn) : fn_(fn) {}
@@ -86,80 +86,75 @@ class Thermometers {
     int idx_;
   };
 
-  // Returns true if the bus uses parasite power; false otherwise. Updated by
-  // `update()`.
+  /// Returns true if the bus uses parasite power; false otherwise.
+  ///
+  /// Updated by `update()`.
   bool isParasite() const { return parasite_; }
 
-  // Returns the count of supported thermometers that have been identified on
-  // the bus.
+  /// Returns the count of supported thermometers found on the bus.
   int count() const { return rom_codes_.size(); }
 
-  // Returns the rom code of an ith identified thermometer. The thermometers are
-  // ordered by rom code.
+  /// Returns the rom code of the ith thermometer.
+  ///
+  /// The thermometers are ordered by rom code.
   RomCode rom_code(int idx) const { return rom_codes_[idx]; }
 
-  // Returns a thermometer with the specified rom code, or nullptr if such
-  // thermometer has not been identified on the bus.
+  /// Returns a thermometer with the specified rom code, or nullptr if missing.
   const Thermometer* thermometerByRomCode(RomCode rom_code) const {
     const auto itr = thermometers_.find(rom_code);
     return (itr == thermometers_.end()) ? nullptr : &*itr;
   }
 
-  // Returns the ith identified thermometer. The thermometers are
-  // ordered by rom code.
+  /// Returns the ith identified thermometer.
+  ///
+  /// The thermometers are ordered by rom code.
   const Thermometer& thermometer(int idx) const {
     return *thermometerByRomCode(rom_code(idx));
   }
 
-  // Returns the last completed conversion time, or Uptime::Start() if there was
-  // no complete converion yet.
-  //
-  // Thermometers will generally report the same time from `conversion_time()`,
-  // although they may report older values in case they failed to read after the
-  // most recent conversion request.
+  /// Returns the last completed conversion time, or Uptime::Start() if none.
+  ///
+  /// Thermometers generally report the same `conversion_time()`, but may
+  /// return older values if they failed to read after the latest conversion.
   roo_time::Uptime lastReadingTime() const {
     return last_completed_conversion_;
   }
 
-  // Adds a listener to be notified when new thermometers are discovered or when
-  // convesion completes.
+  /// Adds a listener for discovery or conversion events.
   void addEventListener(EventListener* listener);
 
-  // Removes a previously added event listener.
+  /// Removes a previously added event listener.
   void removeEventListener(EventListener* listener);
 
-  // Returs true if a conversion is in progress. You can check when the
-  // conversion will complete by calling getPendingConversionTime().
+  /// Returns true if a conversion is in progress.
+  ///
+  /// Use `getPendingConversionTime()` to see when it should complete.
   bool isConversionPending() const {
     return pending_conversion_ != roo_time::Uptime::Start();
   }
 
-  // Returns the time (usually in the future) when the pending conversion is
-  // expected to complete. If there is no pending conversion, returns
-  // Uptime::Start().
+  /// Returns the expected conversion completion time, or Uptime::Start().
   roo_time::Uptime getPendingConversionTime() const {
     return pending_conversion_;
   }
 
-  // Returns the vector of all rom codes, sorted lexicographically.
+  /// Returns all rom codes, sorted lexicographically.
   const std::vector<RomCode>& rom_codes() const { return rom_codes_; }
 
-  // Returns an iterator pointing at the first thermometer.
+  /// Returns an iterator pointing at the first thermometer.
   ConstIterator begin() const { return ConstIterator(this, 0); }
 
-  // Returns an iterator pointing past the last thermometer.
+  /// Returns an iterator pointing past the last thermometer.
   ConstIterator end() const { return ConstIterator(this, count()); }
 
-  // Returns the deadline after which a thermometer that is no longer
-  // discoverable gets removed by the `update()` call. Defaults to 5 seconds.
-  // Helpful in overcoming flicker due to flakiness of the OneWire protocol on
-  // weak singal lines.
+  /// Returns the deadline after which missing devices are pruned.
+  ///
+  /// Defaults to 5 seconds. Helps reduce flicker on weak signal lines.
   roo_time::Duration pruningGracePeriod() const {
     return pruning_grace_period_;
   }
 
-  // Sets the deadline after which thermometers that are no longer discoverable
-  // get removed by the `update()` call.
+  /// Sets the deadline after which missing devices are pruned.
   void setPruningGracePeriod(roo_time::Duration pruning_grace_period) {
     pruning_grace_period_ = pruning_grace_period;
   }
@@ -189,9 +184,10 @@ class Thermometers {
 
   Bus& bus();
 
-  // Refreshes discovery/state and starts conversion when possible.
-  // If conversion is already pending, this is a no-op and returns true.
-  // Returns false only when a new conversion cannot be started.
+  /// Refreshes discovery/state and starts conversion when possible.
+  ///
+  /// If a conversion is already pending, this is a no-op and returns true.
+  /// Returns false only when a new conversion cannot be started.
   bool update();
 
   void updateThermometers();
@@ -202,38 +198,40 @@ class Thermometers {
 
   void conversionCompleted();
 
-  // If conversion_time is zero, it is assumed that there has been no conversion
-  // yet.
+  /// Initializes a thermometer using a scratchpad read.
+  ///
+  /// If `conversion_time` is zero, it is assumed that no conversion has
+  /// completed yet.
   bool initThermometer(RomCode rom_code, const Scratchpad& scratchpad,
                        Thermometer& t, roo_time::Uptime conversion_time);
 
   void readPowerSupply();
 
-  // The bus.
+  /// The bus.
   OneWire& onewire_;
 
-  // When did the last conversion finish.
+  /// When did the last conversion finish.
   roo_time::Uptime last_completed_conversion_;
 
-  // When will the current conversion finish. Zero means none is pending.
+  /// When will the current conversion finish. Zero means none is pending.
   roo_time::Uptime pending_conversion_;
 
-  // Whether the bus uses parasite power. Auto-detected.
+  /// Whether the bus uses parasite power. Auto-detected.
   bool parasite_;
 
   roo_scheduler::SingletonTask conversion_completion_task_;
 
-  // List of discovered rom codes, sorted ascending.
+  /// List of discovered rom codes, sorted ascending.
   std::vector<RomCode> rom_codes_;
 
-  // Map that allows retrieval of thermometers by rom code.
+  /// Map that allows retrieval of thermometers by rom code.
   ThermometersHT thermometers_;
 
   roo_collections::FlatSmallHashSet<EventListener*> event_listeners_;
 
-  // How long to report a previously present thermometer as still present, even
-  // if it doesn't report during discovery. Defaults to 5 seconds. Can be
-  // changed by setRememberance.
+  /// How long to keep a previously present thermometer as still present.
+  ///
+  /// Defaults to 5 seconds.
   roo_time::Duration pruning_grace_period_;
 };
 

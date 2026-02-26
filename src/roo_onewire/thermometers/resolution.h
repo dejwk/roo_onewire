@@ -2,6 +2,7 @@
 
 namespace roo_onewire {
 
+/// Temperature sensor resolution in bits.
 enum Resolution {
   RESOLUTION_UNDEFINED = 0,
   RESOLUTION_9_BITS = 9,

@@ -11,14 +11,21 @@
 
 namespace roo_onewire {
 
+/// Snapshot of a thermometer reading and its metadata.
 class Thermometer {
  public:
+  /// Creates an empty thermometer instance.
   Thermometer();
 
+  /// Returns the rom code identifying this device.
   const RomCode& rom_code() const { return rom_code_; }
+  /// Returns the device family.
   DeviceFamily family() const { return family_; }
+  /// Returns the reported resolution.
   Resolution resolution() const { return resolution_; }
+  /// Returns the latest temperature reading.
   roo_quantity::Temperature temperature() const { return temperature_; }
+  /// Returns the conversion time of the reading.
   roo_time::Uptime conversion_time() const { return conversion_time_; }
 
  private:
@@ -41,6 +48,7 @@ class Thermometer {
   roo_time::Uptime conversion_time_;
 };
 
+/// Streams a human-readable thermometer summary.
 roo_logging::Stream& operator<<(roo_logging::Stream& os, const Thermometer& t);
 
 }  // namespace roo_onewire

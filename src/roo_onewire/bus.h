@@ -9,6 +9,10 @@
 
 namespace roo_onewire {
 
+/// Bus type used by the OneWire stack.
+///
+/// In tests, maps to `FakeOneWire`. In production, maps to the internal
+/// OneWire implementation.
 #ifdef ROO_TESTING
 using Bus = ::FakeOneWire;
 #else
