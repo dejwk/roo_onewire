@@ -189,6 +189,9 @@ class Thermometers {
 
   Bus& bus();
 
+  // Refreshes discovery/state and starts conversion when possible.
+  // If conversion is already pending, this is a no-op and returns true.
+  // Returns false only when a new conversion cannot be started.
   bool update();
 
   void updateThermometers();
