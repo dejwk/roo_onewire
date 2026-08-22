@@ -1,8 +1,9 @@
 load("@roo_testing//roo_testing/emulation:arduino.bzl", "roo_arduino_example")
 
 roo_arduino_example(
-    name = "Synchronous",
-    sketch = "Synchronous.ino",
+    name = "Asynchronous",
+    sketch = "Asynchronous.ino",
+    visibility = ["//visibility:public"],
     deps = [
         "//:roo_onewire",
         "@roo_scheduler",

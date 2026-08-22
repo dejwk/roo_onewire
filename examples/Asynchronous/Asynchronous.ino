@@ -4,6 +4,37 @@
 // the library triggers a designated function that can respond to it.
 
 #include "Arduino.h"
+
+static constexpr int kOneWirePin = 18;
+
+#ifdef ROO_TESTING
+
+#include "roo_testing/buses/onewire/fake_onewire.h"
+#include "roo_testing/devices/onewire/thermometer/thermometer.h"
+#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
+#include "roo_testing/transducers/temperature/temperature.h"
+
+using roo_testing_transducers::FixedThermometer;
+using roo_testing_transducers::Temperature;
+
+struct Emulator {
+  FixedThermometer indoor;
+  FixedThermometer outdoor;
+  FakeOneWireInterface bus;
+
+  Emulator()
+      : indoor(Temperature::FromC(23.5)),
+        outdoor(Temperature::FromC(8.25)),
+        bus({
+            new FakeOneWireThermometer("28FF2A4C30180207", indoor),
+            new FakeOneWireThermometer("28FFA585301801EB", outdoor),
+        }) {
+    FakeEsp32().attachOneWireBus(bus, kOneWirePin);
+  }
+} emulator;
+
+#endif
+
 #include "roo_onewire.h"
 #include "roo_scheduler.h"
 #include "roo_time.h"
@@ -11,8 +42,6 @@
 using namespace roo_onewire;
 using namespace roo_scheduler;
 using namespace roo_time;
-
-const int kOneWirePin = 18;
 
 Scheduler scheduler;
 roo_onewire::OneWire onewire(scheduler);
