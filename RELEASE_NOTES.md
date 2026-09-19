@@ -1,3 +1,12 @@
+# roo_onewire 2.0.11
+
+- Upgrade Roo dependencies to `roo_collections` 1.4.7, `roo_logging` 1.5.10, and `roo_scheduler` 2.2.0 in Bazel and PlatformIO.
+- Update Bazel dependencies to `rules_cc` 0.2.25 and `googletest` 1.18.0.bcr.1.
+- Update `roo_testing` and the shared CI workflow to 2.1.2.
+- Add consolidated release notes for previous versions.
+
+---
+
 # [roo_onewire 2.0.10](https://github.com/dejwk/roo_onewire/releases/tag/2.0.10)
 
 Published 2026-08-29.
