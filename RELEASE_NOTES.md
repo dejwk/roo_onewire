@@ -1,3 +1,9 @@
+# roo_onewire 2.0.12
+
+- Update `roo_quantity` from 1.1.9 to 1.1.10 in Bazel and raise the PlatformIO minimum dependency version to 1.1.10.
+
+---
+
 # roo_onewire 2.0.11
 
 - Upgrade Roo dependencies to `roo_collections` 1.4.7, `roo_logging` 1.5.10, and `roo_scheduler` 2.2.0 in Bazel and PlatformIO.
