@@ -1,3 +1,11 @@
+# roo_onewire 2.0.13
+
+- Upgrade dependencies to `roo_collections` 1.4.8, `roo_logging` 1.5.11, `roo_scheduler` 2.2.1, and `roo_quantity` 1.1.11; update PlatformIO minimum versions accordingly.
+- Upgrade `roo_testing` to 2.3.0.
+- Improve Bazel tooling with automatic ESP-IDF profile selection for example runs, an ESP32 ESP-IDF configuration, and a helper to test both Arduino and ESP-IDF profiles.
+
+---
+
 # roo_onewire 2.0.12
 
 - Update `roo_quantity` from 1.1.9 to 1.1.10 in Bazel and raise the PlatformIO minimum dependency version to 1.1.10.
