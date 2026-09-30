@@ -29,7 +29,7 @@ FakeOneWireInterface* findOrFail(uint8_t pin) {
 }
 }  // namespace
 
-OneWire::OneWire(roo_scheduler::Scheduler& scheduler)
+OneWire::OneWire(roo_scheduler::SchedulerClient& scheduler)
     : onewire_(nullptr), thermometers_(*this, scheduler) {}
 
 void OneWire::begin(uint8_t pin) {
@@ -38,14 +38,13 @@ void OneWire::begin(uint8_t pin) {
 }
 
 #else
-OneWire::OneWire(roo_scheduler::Scheduler& scheduler)
+OneWire::OneWire(roo_scheduler::SchedulerClient& scheduler)
     : onewire_(), thermometers_(*this, scheduler) {}
-
 
 void OneWire::begin(uint8_t pin) { onewire_.begin(pin); }
 #endif
 
-OneWire::OneWire(uint8_t pin, roo_scheduler::Scheduler& scheduler)
+OneWire::OneWire(uint8_t pin, roo_scheduler::SchedulerClient& scheduler)
     : OneWire(scheduler) {
   begin(pin);
 }

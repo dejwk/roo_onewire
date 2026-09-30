@@ -180,7 +180,7 @@ class Thermometers {
     Iterator find(const RomCode& rom_code) { return lookup(rom_code); }
   };
 
-  Thermometers(OneWire& onewire, roo_scheduler::Scheduler& scheduler);
+  Thermometers(OneWire& onewire, roo_scheduler::SchedulerClient& scheduler);
 
   Bus& bus();
 

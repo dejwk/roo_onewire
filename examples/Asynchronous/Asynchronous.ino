@@ -43,7 +43,7 @@ using namespace roo_onewire;
 using namespace roo_scheduler;
 using namespace roo_time;
 
-Scheduler scheduler;
+SchedulingService scheduler;
 roo_onewire::OneWire onewire(scheduler);
 
 Thermometers& thermometers = onewire.thermometers();

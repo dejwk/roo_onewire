@@ -43,13 +43,11 @@ struct Emulator {
 using namespace roo_onewire;
 using namespace roo_scheduler;
 
-Scheduler scheduler;
+SchedulingService scheduler;
 roo_onewire::OneWire onewire(scheduler);
 Thermometers& thermometers = onewire.thermometers();
 
-void setup() {
-  onewire.begin(kOneWirePin);
-}
+void setup() { onewire.begin(kOneWirePin); }
 
 long next_update_time = 0;
 bool readings_fetched = true;

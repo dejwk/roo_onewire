@@ -15,12 +15,12 @@ class OneWire {
  public:
   /// Creates a OneWire bus master that uses the specified scheduler for
   /// asynchronous operations.
-  explicit OneWire(roo_scheduler::Scheduler& scheduler);
+  explicit OneWire(roo_scheduler::SchedulerClient& scheduler);
 
   /// @deprecated Use `OneWire(scheduler)` followed by `begin(pin)` instead.
   ///
   /// Behavior of `pinMode()` during static initialization is not guaranteed.
-  OneWire(uint8_t pin, roo_scheduler::Scheduler& scheduler);
+  OneWire(uint8_t pin, roo_scheduler::SchedulerClient& scheduler);
 
   /// Initializes OneWire bus on the specified GPIO pin.
   void begin(uint8_t pin);

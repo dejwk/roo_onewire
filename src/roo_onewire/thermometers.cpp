@@ -76,7 +76,7 @@ TemperatureData ReadTemperatureData(DeviceFamily family,
 Bus& Thermometers::bus() { return onewire_.bus(); }
 
 Thermometers::Thermometers(OneWire& onewire,
-                           roo_scheduler::Scheduler& scheduler)
+                           roo_scheduler::SchedulerClient& scheduler)
     : onewire_(onewire),
       last_completed_conversion_(Uptime::Start()),
       pending_conversion_(Uptime::Start()),

@@ -7,5 +7,5 @@ bazel_dep(name = "googletest", version = "1.18.0.bcr.1")
 
 bazel_dep(name = "roo_collections", version = "1.4.8")
 bazel_dep(name = "roo_logging", version = "1.5.11")
-bazel_dep(name = "roo_scheduler", version = "2.2.1")
+bazel_dep(name = "roo_scheduler", version = "2.3.0")
 bazel_dep(name = "roo_quantity", version = "1.1.11")
