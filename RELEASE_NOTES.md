@@ -1,3 +1,11 @@
+# roo_onewire 2.0.14
+
+- Upgrade `roo_scheduler` to 2.3.0 in Bazel and raise the PlatformIO minimum version accordingly.
+- Migrate `OneWire` and `Thermometers` constructors to accept `roo_scheduler::SchedulerClient&` instead of `Scheduler&`.
+- Update synchronous and asynchronous examples to use `SchedulingService`.
+
+---
+
 # roo_onewire 2.0.13
 
 - Upgrade dependencies to `roo_collections` 1.4.8, `roo_logging` 1.5.11, `roo_scheduler` 2.2.1, and `roo_quantity` 1.1.11; update PlatformIO minimum versions accordingly.
