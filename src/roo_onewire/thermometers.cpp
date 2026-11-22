@@ -1,5 +1,7 @@
 #include "roo_onewire/thermometers.h"
 
+#include <algorithm>
+
 #include "roo_logging.h"
 #include "roo_onewire.h"
 
@@ -159,17 +161,17 @@ bool Thermometers::readScratchpad(RomCode rom_code, Scratchpad& scratchpad) {
   bus().select(addr);
   bus().write(kReadScratchpad);
 
-  for (uint8_t i = 0; i < 9; i++) {
-    scratchpad[i] = bus().read();
-  }
-  if (!bus().reset()) {
+  bus().read_bytes(scratchpad, sizeof(scratchpad));
+  // A bus held low produces an all-zero frame with a matching CRC.
+  if (std::all_of(scratchpad, scratchpad + sizeof(scratchpad),
+                  [](uint8_t byte) { return byte == 0; })) {
     LOG(ERROR) << "Reading scratchpad failed for OneWire device " << rom_code
-               << " (protocol error)";
+               << " (all-zero scratchpad)";
     return false;
   }
 
-  // Verify CRC.
-  if (bus().crc8(&scratchpad[0], 8) != scratchpad[8]) {
+  constexpr size_t kDataSize = sizeof(scratchpad) - 1;
+  if (Bus::crc8(scratchpad, kDataSize) != scratchpad[kDataSize]) {
     LOG(ERROR) << "Reading scratchpad failed for OneWire device " << rom_code
                << " (CRC error)";
     return false;
