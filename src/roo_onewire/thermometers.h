@@ -205,7 +205,8 @@ class Thermometers {
   bool initThermometer(RomCode rom_code, const Scratchpad& scratchpad,
                        Thermometer& t, roo_time::Uptime conversion_time);
 
-  void readPowerSupply();
+  /// Detects parasite power after a presence pulse, or returns false.
+  bool readPowerSupply();
 
   /// The bus.
   OneWire& onewire_;

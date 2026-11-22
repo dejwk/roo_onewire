@@ -90,15 +90,14 @@ bool Thermometers::update() {
   if (isConversionPending()) {
     return true;
   }
-  readPowerSupply();
+  const bool power_detected = readPowerSupply();
   updateThermometers();
-  if (!beginConversion()) {
+  if (!power_detected || !beginConversion()) {
     return false;
   }
-  roo_time::Duration delay = Millis(750);
-  conversion_completion_task_.scheduleAfter(delay,
-                                            roo_scheduler::PRIORITY_SENSITIVE);
-  pending_conversion_ = Uptime::Now() + delay;
+  pending_conversion_ = Uptime::Now() + Millis(750);
+  conversion_completion_task_.scheduleOn(pending_conversion_,
+                                         roo_scheduler::PRIORITY_SENSITIVE);
   return true;
 }
 
@@ -250,7 +249,7 @@ bool Thermometers::initThermometer(RomCode rom_code,
 }
 
 bool Thermometers::beginConversion() {
-  if (!bus().reset()) return false;
+  if (rom_codes_.empty() || bus().reset() == 0) return false;
   MLOG(roo_onewire_thermometers) << "Starting temperature conversion... ";
   bus().skip();
   bus().write(kConvert, parasite_);
@@ -258,6 +257,7 @@ bool Thermometers::beginConversion() {
 }
 
 void Thermometers::conversionCompleted() {
+  if (parasite_) bus().depower();
   MLOG(roo_onewire_thermometers) << "Temperature conversion completed.";
   last_completed_conversion_ = pending_conversion_;
   pending_conversion_ = Uptime::Start();
@@ -273,12 +273,13 @@ void Thermometers::conversionCompleted() {
   }
 }
 
-void Thermometers::readPowerSupply() {
-  bus().reset();
+bool Thermometers::readPowerSupply() {
+  parasite_ = false;
+  if (bus().reset() == 0) return false;
   bus().skip();
   bus().write(kReadPowerSupply);
-  parasite_ = (bus().read_bit() == 0);
-  bus().reset();
+  parasite_ = bus().read_bit() == 0;
+  return true;
 }
 
 void Thermometers::addEventListener(EventListener* listener) {

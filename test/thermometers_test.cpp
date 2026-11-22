@@ -19,6 +19,11 @@ class TestThermometer : public FakeOneWireThermometer {
     FakeOneWireThermometer::reset();
   }
 
+  void start_function_command() override {
+    if (function_command() == 0x44) ++conversion_count;
+    FakeOneWireThermometer::start_function_command();
+  }
+
   bool read_function_bit() override {
     bool bit = FakeOneWireThermometer::read_function_bit();
     if (function_command() != 0xBE) return bit;
@@ -27,6 +32,7 @@ class TestThermometer : public FakeOneWireThermometer {
   }
 
   int reset_count = 0;
+  int conversion_count = 0;
   bool zero_scratchpad = false;
   bool corrupt_crc = false;
 };
@@ -45,6 +51,7 @@ TEST(ThermometersTest, DetectsParasitePowerAndCompletesConversion) {
   static FakeOneWireInterface bus({device});
   FakeEsp32().attachOneWireBus(bus, kPin);
 
+  const int previous_conversions = device->conversion_count;
   int conversions = 0;
   Thermometers::ConversionListener listener([&conversions] { ++conversions; });
   roo_scheduler::SchedulingService scheduler;
@@ -72,18 +79,19 @@ TEST(ThermometersTest, DetectsParasitePowerAndCompletesConversion) {
   EXPECT_FALSE(thermometers.isConversionPending());
   EXPECT_EQ(conversions, 1);
   EXPECT_EQ(device->reset_count, resets_before_reading + 1);
+  EXPECT_EQ(device->conversion_count, previous_conversions + 1);
   EXPECT_DOUBLE_EQ(thermometers.thermometer(0).temperature().degCelcius(),
                    kTemperatureC);
 }
 
-// Verifies that both stuck-low frames and scratchpads with a bad CRC are
-// rejected during discovery.
+// Verifies that invalid scratchpads are rejected and presence alone never
+// triggers a conversion.
 TEST(ThermometersTest, RejectsInvalidScratchpads) {
   constexpr int kPin = 19;
   static const roo_testing_transducers::FixedThermometer sensor(
       roo_testing_transducers::Temperature::FromC(23.5));
-  static TestThermometer* const all_zero =
-      new TestThermometer("28FF2A4C30180207", sensor);
+  static TestThermometer* const all_zero = new TestThermometer(
+      "28FF2A4C30180207", sensor, FakeOneWireThermometer::POWER_PARASITE);
   static TestThermometer* const bad_crc =
       new TestThermometer("28FFA585301801EB", sensor);
   static FakeOneWireInterface bus({all_zero, bad_crc});
@@ -94,8 +102,12 @@ TEST(ThermometersTest, RejectsInvalidScratchpads) {
   roo_scheduler::SchedulingService scheduler;
   OneWire onewire(scheduler);
   onewire.begin(kPin);
-  onewire.update();
+  EXPECT_FALSE(onewire.update());
+  EXPECT_TRUE(onewire.thermometers().isParasite());
+  EXPECT_FALSE(onewire.thermometers().isConversionPending());
   EXPECT_EQ(onewire.thermometers().count(), 0);
+  EXPECT_EQ(all_zero->conversion_count, 0);
+  EXPECT_EQ(bad_crc->conversion_count, 0);
 }
 
 }  // namespace
