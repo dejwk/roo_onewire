@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <inttypes.h>
 
+#include "roo_collections.h"
 #include "roo_collections/flat_small_hash_set.h"
 #include "roo_logging.h"
 #include "roo_onewire/device_family.h"
