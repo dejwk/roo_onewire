@@ -88,7 +88,7 @@ class Thermometers {
 
   /// Returns true if the bus uses parasite power; false otherwise.
   ///
-  /// Updated by `update()`.
+  /// Defaults to false until the first `update()` detects the power mode.
   bool isParasite() const { return parasite_; }
 
   /// Returns the count of supported thermometers found on the bus.
@@ -217,7 +217,7 @@ class Thermometers {
   roo_time::Uptime pending_conversion_;
 
   /// Whether the bus uses parasite power. Auto-detected.
-  bool parasite_;
+  bool parasite_ = false;
 
   roo_scheduler::SingletonTask conversion_completion_task_;
 

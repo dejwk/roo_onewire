@@ -38,3 +38,21 @@ cc_test(
         "@roo_testing//:arduino_gtest_main",
     ],
 )
+
+cc_test(
+    name = "thermometers_test",
+    size = "small",
+    srcs = ["test/thermometers_test.cpp"],
+    deps = [
+        ":roo_onewire",
+        "@googletest//:gtest",
+        "@roo_scheduler",
+        "@roo_testing//:arduino_gtest_main",
+        "@roo_testing//roo_testing/buses/onewire",
+        "@roo_testing//roo_testing/devices/onewire/thermometer",
+        "@roo_testing//roo_testing/microcontrollers/esp32",
+        "@roo_testing//roo_testing/system:manual_time_mode",
+        "@roo_testing//roo_testing/system:timer",
+        "@roo_testing//roo_testing/transducers/temperature",
+    ],
+)
