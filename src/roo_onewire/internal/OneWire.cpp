@@ -276,27 +276,19 @@ uint8_t CRIT_TIMING OneWire::read_bit(void)
 // other mishap.
 //
 void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
-    uint8_t bitMask;
-
-    for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-	OneWire::write_bit( (bitMask & v)?1:0);
-    }
-    if ( !power) {
-	noInterrupts();
-	DIRECT_MODE_INPUT(baseReg, bitmask);
-	DIRECT_WRITE_LOW(baseReg, bitmask);
-	interrupts();
-    }
+  for (uint8_t bit_mask = 1; bit_mask != 0; bit_mask <<= 1) {
+    write_bit((bit_mask & v) != 0);
+  }
+  if (power == 0) depower();
 }
 
-void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
-  for (uint16_t i = 0 ; i < count ; i++)
-    write(buf[i]);
-  if (!power) {
-    noInterrupts();
-    DIRECT_MODE_INPUT(baseReg, bitmask);
-    DIRECT_WRITE_LOW(baseReg, bitmask);
-    interrupts();
+void OneWire::write_bytes(const uint8_t* buf, uint16_t count, bool power) {
+  if (count == 0) {
+    if (!power) depower();
+    return;
+  }
+  for (uint16_t i = 0; i < count; ++i) {
+    write(buf[i], power && i + 1 == count);
   }
 }
 
@@ -338,11 +330,11 @@ void OneWire::skip()
     write(0xCC);           // Skip ROM
 }
 
-void OneWire::depower()
-{
-	noInterrupts();
-	DIRECT_MODE_INPUT(baseReg, bitmask);
-	interrupts();
+void OneWire::depower() {
+  noInterrupts();
+  DIRECT_MODE_INPUT(baseReg, bitmask);
+  DIRECT_WRITE_LOW(baseReg, bitmask);
+  interrupts();
 }
 
 #if ONEWIRE_SEARCH

@@ -96,7 +96,9 @@ class OneWire
     // another read or write.
     void write(uint8_t v, uint8_t power = 0);
 
-    void write_bytes(const uint8_t *buf, uint16_t count, bool power = 0);
+    /// Writes @p count bytes and holds the bus high after the last byte when
+    /// @p power is true. An empty unpowered write releases the bus.
+    void write_bytes(const uint8_t* buf, uint16_t count, bool power = 0);
 
     // Read a byte.
     uint8_t read(void);

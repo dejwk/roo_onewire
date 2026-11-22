@@ -4,6 +4,7 @@
 
 struct gpio_dev_t {
   gpio_num_t last_pin = GPIO_NUM_MAX;
+  int release_count = 0;
   bool output_enabled = false;
   bool output_level = false;
   bool input_level = true;
@@ -18,6 +19,7 @@ inline void gpio_ll_output_enable(gpio_dev_t* gpio, gpio_num_t pin) {
 
 inline void gpio_ll_output_disable(gpio_dev_t* gpio, gpio_num_t pin) {
   gpio->last_pin = pin;
+  ++gpio->release_count;
   gpio->output_enabled = false;
 }
 
