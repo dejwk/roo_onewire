@@ -7,6 +7,21 @@
 
 #include <stdint.h>
 
+#ifdef ARDUINO_ARCH_ESP32
+#include <driver/gpio.h>
+#ifdef __has_include
+#if __has_include(<hal/gpio_ll.h>)
+#define ROO_ONEWIRE_HAVE_GPIO_LL
+#endif
+#endif
+#ifdef ROO_ONEWIRE_HAVE_GPIO_LL
+#include <hal/gpio_ll.h>
+#else
+#include <driver/rtc_io.h>
+#include <soc/gpio_struct.h>
+#endif
+#endif
+
 namespace roo_onewire {
 namespace internal {
 
@@ -159,123 +174,104 @@ bool directRead(IO_REG_TYPE mask)
 #define DIRECT_WRITE_HIGH(base, mask)   (mask > 0x8000) ? GP16O |= 1 : (GPOS = (mask))
 
 #elif defined(ARDUINO_ARCH_ESP32)
-#include <driver/rtc_io.h>
-#include <soc/gpio_struct.h>
-#define PIN_TO_BASEREG(pin)             (0)
-#define PIN_TO_BITMASK(pin)             (pin)
+#define PIN_TO_BASEREG(pin) (0)
 #define IO_REG_TYPE uint32_t
 #define IO_REG_BASE_ATTR
 #define IO_REG_MASK_ATTR
 
-static inline __attribute__((always_inline))
-IO_REG_TYPE directRead(IO_REG_TYPE pin)
-{
-#if CONFIG_IDF_TARGET_ESP32C3
-    return (GPIO.in.val >> pin) & 0x1;
-#else // plain ESP32
-    if ( pin < 32 )
-        return (GPIO.in >> pin) & 0x1;
-    else if ( pin < 46 )
-        return (GPIO.in1.val >> (pin - 32)) & 0x1;
+// Configures an output-capable GPIO as a released 1-Wire bus.
+static IO_REG_TYPE InitEsp32Pin(uint8_t pin) {
+  int gpio = pin;
+#if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
+  gpio = digitalPinToGPIONumber(pin);
 #endif
-
-    return 0;
+  if (!GPIO_IS_VALID_OUTPUT_GPIO(gpio)) return GPIO_NUM_MAX;
+  pinMode(pin, INPUT);
+  return gpio;
 }
 
-static inline __attribute__((always_inline))
-void directWriteLow(IO_REG_TYPE pin)
-{
-#if CONFIG_IDF_TARGET_ESP32C3
-    GPIO.out_w1tc.val = ((uint32_t)1 << pin);
-#else // plain ESP32
-    if ( pin < 32 )
-        GPIO.out_w1tc = ((uint32_t)1 << pin);
-    else if ( pin < 46 )
-        GPIO.out1_w1tc.val = ((uint32_t)1 << (pin - 32));
-#endif
+#if !defined(ROO_ONEWIRE_HAVE_GPIO_LL) && ESP_IDF_VERSION_MAJOR < 4
+// ESP-IDF 3.x needs the RTC pad disconnected from the RTC peripheral.
+static inline __attribute__((always_inline)) void DisableLegacyRtcMux(
+    IO_REG_TYPE pin) {
+  const uint32_t rtc_reg = rtc_gpio_desc[pin].reg;
+  if (rtc_reg == 0) return;
+  ESP_REG(rtc_reg) &= ~(rtc_gpio_desc[pin].mux | rtc_gpio_desc[pin].pullup |
+                        rtc_gpio_desc[pin].pulldown);
 }
-
-static inline __attribute__((always_inline))
-void directWriteHigh(IO_REG_TYPE pin)
-{
-#if CONFIG_IDF_TARGET_ESP32C3
-    GPIO.out_w1ts.val = ((uint32_t)1 << pin);
-#else // plain ESP32
-    if ( pin < 32 )
-        GPIO.out_w1ts = ((uint32_t)1 << pin);
-    else if ( pin < 46 )
-        GPIO.out1_w1ts.val = ((uint32_t)1 << (pin - 32));
 #endif
-}
 
-static inline __attribute__((always_inline))
-void directModeInput(IO_REG_TYPE pin)
-{
-#if CONFIG_IDF_TARGET_ESP32C3
-    GPIO.enable_w1tc.val = ((uint32_t)1 << (pin));
+static inline __attribute__((always_inline)) IO_REG_TYPE
+DirectRead(IO_REG_TYPE pin) {
+  if (pin == GPIO_NUM_MAX) return 0;
+#ifdef ROO_ONEWIRE_HAVE_GPIO_LL
+  return gpio_ll_get_level(&GPIO, static_cast<gpio_num_t>(pin));
 #else
-    if ( digitalPinIsValid(pin) )
-    {
-#if ESP_IDF_VERSION_MAJOR < 4      // IDF 3.x ESP32/PICO-D4
-        uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
-
-        if ( rtc_reg ) // RTC pins PULL settings
-        {
-            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
-            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
-        }
-#endif
-	// Input
-        if ( pin < 32 )
-            GPIO.enable_w1tc = ((uint32_t)1 << pin);
-        else
-            GPIO.enable1_w1tc.val = ((uint32_t)1 << (pin - 32));
-    }
+  return (pin < 32 ? GPIO.in >> pin : GPIO.in1.val >> (pin - 32)) & 1;
 #endif
 }
 
-static inline __attribute__((always_inline))
-void directModeOutput(IO_REG_TYPE pin)
-{
-#if CONFIG_IDF_TARGET_ESP32C3
-    GPIO.enable_w1ts.val = ((uint32_t)1 << (pin));
+static inline __attribute__((always_inline)) void DirectWrite(IO_REG_TYPE pin,
+                                                              uint32_t level) {
+  if (pin == GPIO_NUM_MAX) return;
+#ifdef ROO_ONEWIRE_HAVE_GPIO_LL
+  gpio_ll_set_level(&GPIO, static_cast<gpio_num_t>(pin), level);
 #else
-    if ( digitalPinIsValid(pin) && pin <= 33 ) // pins above 33 can be only inputs
-    {
-#if ESP_IDF_VERSION_MAJOR < 4      // IDF 3.x ESP32/PICO-D4
-        uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
-
-        if ( rtc_reg ) // RTC pins PULL settings
-        {
-            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].mux);
-            ESP_REG(rtc_reg) = ESP_REG(rtc_reg) & ~(rtc_gpio_desc[pin].pullup | rtc_gpio_desc[pin].pulldown);
-        }
-#endif
-        // Output
-        if ( pin < 32 )
-            GPIO.enable_w1ts = ((uint32_t)1 << pin);
-        else // already validated to pins <= 33
-            GPIO.enable1_w1ts.val = ((uint32_t)1 << (pin - 32));
+  const uint32_t mask = uint32_t{1} << (pin % 32);
+  if (pin < 32) {
+    if (level == 0) {
+      GPIO.out_w1tc = mask;
+    } else {
+      GPIO.out_w1ts = mask;
     }
+  } else if (level == 0) {
+    GPIO.out1_w1tc.val = mask;
+  } else {
+    GPIO.out1_w1ts.val = mask;
+  }
 #endif
 }
 
-#define DIRECT_READ(base, pin)          directRead(pin)
-#define DIRECT_WRITE_LOW(base, pin)     directWriteLow(pin)
-#define DIRECT_WRITE_HIGH(base, pin)    directWriteHigh(pin)
-#define DIRECT_MODE_INPUT(base, pin)    directModeInput(pin)
-#define DIRECT_MODE_OUTPUT(base, pin)   directModeOutput(pin)
-// https://github.com/PaulStoffregen/OneWire/pull/47
-// https://github.com/stickbreaker/OneWire/commit/6eb7fc1c11a15b6ac8c60e5671cf36eb6829f82c
-#ifdef  interrupts
-#undef  interrupts
+static inline __attribute__((always_inline)) void DirectModeInput(
+    IO_REG_TYPE pin) {
+  if (pin == GPIO_NUM_MAX) return;
+#ifdef ROO_ONEWIRE_HAVE_GPIO_LL
+  gpio_ll_output_disable(&GPIO, static_cast<gpio_num_t>(pin));
+#else
+#if ESP_IDF_VERSION_MAJOR < 4
+  DisableLegacyRtcMux(pin);
 #endif
-#ifdef  noInterrupts
-#undef  noInterrupts
+  if (pin < 32) {
+    GPIO.enable_w1tc = uint32_t{1} << pin;
+  } else {
+    GPIO.enable1_w1tc.val = uint32_t{1} << (pin - 32);
+  }
 #endif
-#define noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
-#define interrupts() portEXIT_CRITICAL(&mux);}
-//#warning "ESP32 OneWire testing"
+}
+
+static inline __attribute__((always_inline)) void DirectModeOutput(
+    IO_REG_TYPE pin) {
+  if (pin == GPIO_NUM_MAX) return;
+#ifdef ROO_ONEWIRE_HAVE_GPIO_LL
+  gpio_ll_output_enable(&GPIO, static_cast<gpio_num_t>(pin));
+#else
+#if ESP_IDF_VERSION_MAJOR < 4
+  DisableLegacyRtcMux(pin);
+#endif
+  if (pin < 32) {
+    GPIO.enable_w1ts = uint32_t{1} << pin;
+  } else {
+    GPIO.enable1_w1ts.val = uint32_t{1} << (pin - 32);
+  }
+#endif
+}
+
+#define DIRECT_READ(base, pin) DirectRead(pin)
+#define DIRECT_WRITE_LOW(base, pin) DirectWrite(pin, 0)
+#define DIRECT_WRITE_HIGH(base, pin) DirectWrite(pin, 1)
+#define DIRECT_MODE_INPUT(base, pin) DirectModeInput(pin)
+#define DIRECT_MODE_OUTPUT(base, pin) DirectModeOutput(pin)
+#undef ROO_ONEWIRE_HAVE_GPIO_LL
 
 #elif defined(ARDUINO_ARCH_STM32)
 #define PIN_TO_BASEREG(pin)             (0)

@@ -151,28 +151,36 @@ sample code bearing this copyright.
 #include "roo_onewire/internal/util/OneWire_direct_gpio.h"
 
 #ifdef ARDUINO_ARCH_ESP32
-// due to the dual core esp32, a critical section works better than disabling interrupts
-#  define noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
-#  define interrupts() portEXIT_CRITICAL(&mux);}
-// for info on this, search "IRAM_ATTR" at https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/general-notes.html 
-#  define CRIT_TIMING IRAM_ATTR
+// Keep timing-critical slots local to the current core.
+#undef noInterrupts
+#undef interrupts
+#define noInterrupts()                               \
+  {                                                  \
+    portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; \
+    portENTER_CRITICAL(&mux)
+#define interrupts()       \
+  portEXIT_CRITICAL(&mux); \
+  }
+#define CRIT_TIMING IRAM_ATTR
 #else
-#  define CRIT_TIMING 
+#define CRIT_TIMING
 #endif
 
 namespace roo_onewire {
 namespace internal {
 
-void OneWire::begin(uint8_t pin)
-{
-	pinMode(pin, INPUT);
-	bitmask = PIN_TO_BITMASK(pin);
-	baseReg = PIN_TO_BASEREG(pin);
+void OneWire::begin(uint8_t pin) {
+#ifdef ARDUINO_ARCH_ESP32
+  bitmask = InitEsp32Pin(pin);
+#else
+  pinMode(pin, INPUT);
+  bitmask = PIN_TO_BITMASK(pin);
+#endif
+  baseReg = PIN_TO_BASEREG(pin);
 #if ONEWIRE_SEARCH
-	reset_search();
+  reset_search();
 #endif
 }
-
 
 // Perform the onewire reset function.  We will wait up to 250uS for
 // the bus to come high, if it doesn't then it is broken or shorted
@@ -598,13 +606,11 @@ uint16_t OneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
 
 #endif
 
-// undef defines for no particular reason
 #ifdef ARDUINO_ARCH_ESP32
-#  undef noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
-#  undef interrupts() portEXIT_CRITICAL(&mux);}
+#undef noInterrupts
+#undef interrupts
 #endif
-// for info on this, search "IRAM_ATTR" at https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/general-notes.html 
-#undef CRIT_TIMING 
+#undef CRIT_TIMING
 
 }  // namespace internal
 }  // namespace roo_onewire

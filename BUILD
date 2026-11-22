@@ -56,3 +56,29 @@ cc_test(
         "@roo_testing//roo_testing/transducers/temperature",
     ],
 )
+
+# Exercise the bundled GPIO driver with instrumented Arduino and ESP-IDF calls.
+cc_test(
+    name = "onewire_driver_test",
+    size = "small",
+    srcs = [
+        "src/roo_onewire/internal/OneWire.cpp",
+        "src/roo_onewire/internal/OneWire.h",
+        "src/roo_onewire/internal/util/OneWire_direct_gpio.h",
+        "src/roo_onewire/internal/util/OneWire_direct_regtype.h",
+        "test/esp32_gpio_stubs/Arduino.h",
+        "test/esp32_gpio_stubs/driver/gpio.h",
+        "test/esp32_gpio_stubs/hal/gpio_ll.h",
+        "test/onewire_driver_test.cpp",
+    ],
+    copts = ["-UROO_TESTING"],
+    includes = [
+        "src",
+        "test/esp32_gpio_stubs",
+    ],
+    local_defines = [
+        "ARDUINO=10819",
+        "ARDUINO_ARCH_ESP32=1",
+    ],
+    deps = ["@googletest//:gtest_main"],
+)
