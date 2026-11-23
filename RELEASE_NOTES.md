@@ -1,3 +1,14 @@
+# roo_onewire 2.1.0
+
+- Fix parasite power handling by detecting the bus power mode after a presence pulse, holding the bus high after the final byte of a powered write, and releasing it when temperature conversion completes. Skip conversions when no supported thermometers are detected.
+- Validate thermometer scratchpads without a second bus reset. Reject all-zero frames and CRC mismatches.
+- Fix ESP32 GPIO handling for remapped Arduino pins and output-capable GPIOs above 33. Reject input-only pins.
+- Update `OneWire` and `Thermometers` to accept `roo_scheduler::Scheduler&`, the renamed `SchedulerClient` interface.
+- Upgrade Bazel dependencies and PlatformIO minimums to `roo_collections` 2.0.2, `roo_logging` 1.6.1, `roo_scheduler` 2.4.0, and `roo_quantity` 1.1.12.
+- Upgrade Bazel and CI to `roo_testing` 2.7.0, add regression tests for the GPIO and thermometer fixes, and add ESP32-C3, ESP32-S3, and RP2040 configurations to the local test matrix.
+
+---
+
 # roo_onewire 2.0.14
 
 - Upgrade `roo_scheduler` to 2.3.0 in Bazel and raise the PlatformIO minimum version accordingly.
